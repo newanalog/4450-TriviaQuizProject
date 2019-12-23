@@ -14,6 +14,9 @@ const service = new QuizService();
 window.onload = function () {
     // render each question from the pool on page load
     renderQuestions();
+
+    // wire up button to validate all questions in the quiz session
+    document.getElementById("checkAnswers").addEventListener("click", checkAnswers);
 }
 
 function renderQuestions() {
@@ -40,4 +43,10 @@ function renderQuestions() {
         // append the question to the app div
         document.getElementById("app").appendChild(questionNode);
     });
+}
+
+function checkAnswers() {
+    const errors = service.validateQuestions();
+    const questionCount = service.getQuestionCount();
+    alert(`You got ${questionCount-errors.length} out of ${questionCount} correct!`);
 }
