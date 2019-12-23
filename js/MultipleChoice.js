@@ -55,4 +55,16 @@ export default class {
 
         return wrapperDiv;
     }
+    
+    // function to validate given answer agains correct answer from config
+    validate() {
+        if (this.groupName === "") return false;
+
+        const radioItems = [].slice.call(document.getElementsByName(this.groupName));
+        const selectedAnswer = radioItems.find(item => item.checked);
+
+        if (!selectedAnswer) return false;
+
+        return selectedAnswer.value.toLowerCase() === this.correctAnswer.toLowerCase();
+    }
 }
