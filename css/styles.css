@@ -13,6 +13,16 @@ html {
   font-family: sans-serif;
 }
 
+button {
+  margin: 0.8em;
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+  background-color: #ff7f35;
+  color: white;
+  font-size: 0.9em;
+}
+
 .question {
   margin: 0.4em;
   padding: 0.4em;
