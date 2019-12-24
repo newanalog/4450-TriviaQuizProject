@@ -15,5 +15,202 @@
       </div>
     </main>
   </body>
-  <script type="module" src="js/main.js"></script>
+  <script>
+    window.onload = function() {
+      // get a factory that can dynamically create questions based on type
+      const factory = new QuestionFactory();
+      // get a service to hold state of this single quiz session
+      const service = new QuizService();
+      // render each question from the pool on page load
+      renderQuestions(service, factory);
+
+      // wire up button to validate all questions in the quiz session
+      document
+        .getElementById("checkAnswers")
+        .addEventListener("click", () => checkAnswers(service));
+    };
+
+    // This array is used to store the question data in an array
+    const questionPool = [
+      [
+        "multiple-choice",
+        "What is your favorite color?",
+        "Red",
+        "Green",
+        "Blue",
+        "Red"
+      ]
+    ];
+    // helper function to make element creation less verbose
+    function createElement(tagName, attributes, styles) {
+      let el = document.createElement(tagName);
+      el = Object.assign(el, attributes);
+      return Object.assign(el, styles);
+    }
+
+    /*
+      This class uses a factory pattern to return a question 
+      object based on the type of question asked for.  
+      Only multiple choice is supported at first.
+    */
+    class QuestionFactory {
+      // return question object based on question type
+      create(questionConfig) {
+        switch (questionConfig.questionType) {
+          case "multiple-choice":
+            return new MultipleChoice(questionConfig);
+          default:
+            break;
+        }
+      }
+    }
+
+    /*
+      This class uses a repository pattern to store questions 
+      in an array for a quiz session.  Encapsulating this makes 
+      it easier to switch over to using a database later.
+    */
+    class QuizService {
+      constructor() {
+        // array to hold questions for this quiz session
+        this.questions = [];
+      }
+
+      addQuestion = question => this.questions.push(question);
+
+      // return all questions for this session
+      getQuestions = () => this.questions;
+
+      getQuestionCount = () => this.questions.length;
+
+      clearQuestions = () => (this.questions = []);
+
+      validateQuestions = () => {
+        const errors = [];
+        // call each question in the current quiz's validate method
+        // and push any errors to the array to be returned
+        this.questions.forEach((question, index) => {
+          if (!question.validate()) {
+            errors.push(index);
+          }
+        });
+
+        return errors;
+      };
+    }
+
+    /*
+      This class defines a multiple choice question and is able
+      to produce the correct DOM node. It will later have a function 
+      to verify the selected answer against the questionConfig's
+      correct answer property.
+    */
+    class MultipleChoice {
+      constructor(questionConfig) {
+        this.questionType = questionConfig.questionType;
+        this.question = questionConfig.question;
+        this.correctAnswer = questionConfig.correctAnswer;
+        this.choices = questionConfig.choices;
+        this.groupName = "";
+      }
+
+      // function to create dom node with question and radio buttons
+      render(index) {
+        index = index || 0;
+        // create a unique id for the wrapper and radio group to use
+        const id = `${this.questionType}-${index}`;
+
+        // create a div for the wrapper, question, and choices
+        const wrapperDiv = createElement("div", {
+          id: id,
+          className: "question"
+        });
+        const questionDiv = createElement("div", {
+          className: "question-text",
+          innerText: this.question
+        });
+        const choicesDiv = createElement("div", { className: "choices" });
+
+        // create a groupname for the radio buttons
+        this.groupName = `${id}-choice`;
+
+        wrapperDiv.appendChild(questionDiv);
+        wrapperDiv.appendChild(choicesDiv);
+
+        this.choices.forEach((choice, index) => {
+          // create radio input and label for each choice in question config
+          const radioId = `${this.groupName}-${index}`;
+          const input = createElement("input", {
+            type: "radio",
+            name: this.groupName,
+            value: choice,
+            id: radioId,
+            defaultChecked: false,
+            checked: false
+          });
+          const label = createElement("label", { htmlFor: radioId });
+          label.appendChild(document.createTextNode(choice));
+
+          const choiceDiv = createElement("div", { className: "choice" });
+          choiceDiv.appendChild(input);
+          choiceDiv.appendChild(label);
+          choicesDiv.appendChild(choiceDiv);
+        });
+
+        return wrapperDiv;
+      }
+
+      // function to validate given answer agains correct answer from config
+      validate() {
+        if (this.groupName === "") return false;
+
+        const radioItems = [].slice.call(
+          document.getElementsByName(this.groupName)
+        );
+        const selectedAnswer = radioItems.find(item => item.checked);
+
+        if (!selectedAnswer) return false;
+
+        return (
+          selectedAnswer.value.toLowerCase() ===
+          this.correctAnswer.toLowerCase()
+        );
+      }
+    }
+
+    function renderQuestions(service, factory) {
+      questionPool.forEach(item => {
+        // destructure the array item from the pool
+        let [questionType, question, correctAnswer, ...choices] = item;
+
+        // create a "questionConfig" object to send to factory
+        const questionConfig = {
+          questionType: questionType,
+          question: question,
+          correctAnswer: correctAnswer,
+          choices: choices
+        };
+
+        // add factory-created question to this quiz session
+        service.addQuestion(factory.create(questionConfig));
+      });
+
+      service.getQuestions().forEach((question, index) => {
+        // loop through each question and call its render method
+        // index is passed in to ensure unique element ids and names
+        const questionNode = question.render(index);
+        // append the question to the app div
+        document.getElementById("app").appendChild(questionNode);
+      });
+    }
+
+    function checkAnswers(service) {
+      const errors = service.validateQuestions();
+      const questionCount = service.getQuestionCount();
+      alert(
+        `You got ${questionCount -
+          errors.length} out of ${questionCount} correct!`
+      );
+    }
+  </script>
 </html>
