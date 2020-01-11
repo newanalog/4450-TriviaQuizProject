@@ -37,10 +37,6 @@ button {
   border-bottom: 1px solid #ddd;
 }
 
-.choice input {
-  vertical-align: middle;
-}
-
 .choice label {
   padding-left: 0.3em;
 }
