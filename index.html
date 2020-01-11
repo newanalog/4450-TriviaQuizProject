@@ -39,7 +39,16 @@
         "Green",
         "Blue",
         "Red"
-      ]
+      ],
+      [
+        "multiple-choice",
+        "What is your favorite food?",
+        "Pizza",
+        "Chicken Strips",
+        "Pizza",
+        "Vegetables"
+      ],
+      ["true-false", "Winter is coming.", "True"]
     ];
     // helper function to make element creation less verbose
     function createElement(tagName, attributes, styles) {
@@ -58,6 +67,7 @@
       create(questionConfig) {
         switch (questionConfig.questionType) {
           case "multiple-choice":
+          case "true-false":
             return new MultipleChoice(questionConfig);
           default:
             break;
@@ -73,30 +83,38 @@
     class QuizService {
       constructor() {
         // array to hold questions for this quiz session
-        this.questions = [];
+        this._questions = [];
       }
 
-      addQuestion = question => this.questions.push(question);
+      addQuestion(question) {
+        return this._questions.push(question);
+      }
 
       // return all questions for this session
-      getQuestions = () => this.questions;
+      get questions() {
+        return this._questions;
+      }
 
-      getQuestionCount = () => this.questions.length;
+      get questionCount() {
+        return this._questions.length;
+      }
 
-      clearQuestions = () => (this.questions = []);
+      clearQuestions() {
+        this._questions = [];
+      }
 
-      validateQuestions = () => {
+      validateQuestions() {
         const errors = [];
         // call each question in the current quiz's validate method
         // and push any errors to the array to be returned
-        this.questions.forEach((question, index) => {
+        this._questions.forEach((question, index) => {
           if (!question.validate()) {
             errors.push(index);
           }
         });
 
         return errors;
-      };
+      }
     }
 
     /*
@@ -112,6 +130,10 @@
         this.correctAnswer = questionConfig.correctAnswer;
         this.choices = questionConfig.choices;
         this.groupName = "";
+
+        if (this.choices.length === 0) {
+          this.choices = this.choices.concat(["True", "False"]);
+        }
       }
 
       // function to create dom node with question and radio buttons
@@ -195,7 +217,7 @@
         service.addQuestion(factory.create(questionConfig));
       });
 
-      service.getQuestions().forEach((question, index) => {
+      service.questions.forEach((question, index) => {
         // loop through each question and call its render method
         // index is passed in to ensure unique element ids and names
         const questionNode = question.render(index);
@@ -206,7 +228,7 @@
 
     function checkAnswers(service) {
       const errors = service.validateQuestions();
-      const questionCount = service.getQuestionCount();
+      const questionCount = service.questionCount;
       alert(
         `You got ${questionCount -
           errors.length} out of ${questionCount} correct!`
