@@ -77,13 +77,23 @@ button {
   background-image: linear-gradient(to right, #868f96 0%, #596164 100%);
 }
 
+#questions > div {
+  margin-top: 20px;
+}
+
 .hidden {
   display: none;
 }
 
 .question {
   margin: 0.4em;
-  padding: 0.4em;
+  padding: 0.5em;
+  border-bottom: 1px solid #ddd;
+}
+
+.question:last-of-type {
+  border-bottom: none;
+  margin-bottom: 2em;
 }
 
 .question-text {
@@ -91,10 +101,23 @@ button {
 }
 
 .choice {
-  padding: 0.8em;
-  border-bottom: 1px solid #ddd;
+  padding: 0.5em;
 }
 
 .choice label {
   padding-left: 0.3em;
+}
+
+.userText {
+  padding: 0.8em;
+}
+
+.userText input {
+  width: 100%;
+  outline: none;
+  height: 2em;
+  padding: 0.4em;
+  border-radius: 4px;
+  border: solid 1px #dcdcdc;
+  margin-bottom: 5px;
 }

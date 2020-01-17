@@ -8,14 +8,13 @@
   </head>
   <body></body>
   <script>
-    // using the global namespace for these for simplicity
-    // get a service to hold state of this quiz session
+    // declare a service to hold state of this quiz session
     let quizService;
-    // get a factory that can dynamically create questions based on type
+    // declare a factory that can dynamically create questions based on type
     let questionFactory;
 
     window.onload = function() {
-      // instantiate our service and factory
+      // instantiate our service and factory after the window loads
       quizService = new QuizService();
       questionFactory = new QuestionFactory();
 
@@ -23,30 +22,36 @@
       createStartButton(); // creating start button which has an event to kick things off
     };
 
-    // This array is used to store the question data in an array for now
-    // multiple-choice schema is: questionType,question,answer,choice-1,choice-2,...,choice-n
-    // true-false schema is: questionTYpe,question,answer - true/false added on creation of question
-    const questionPool = [
-      [
-        "multiple-choice",
-        "What is your favorite color?",
-        "Red",
-        "Green",
-        "Blue",
-        "Red"
-      ],
-      [
-        "multiple-choice",
-        "What is your favorite food?",
-        "Pizza",
-        "Chicken Strips",
-        "Pizza",
-        "Vegetables"
-      ],
-      ["true-false", "Winter is coming.", "True"]
-    ];
+    // JSON formatted question pool that can serialized elsewhere if needed
+    const questionPool = {
+      "questions": [
+        {
+          "questionType": "multiple-choice",
+          "question": "What is your favorite color?",
+          "correctAnswers": ["Red"],
+          "choices": ["Green", "Blue", "Red"]
+        },
+        {
+          "questionType": "multiple-choice",
+          "question": "What is your favorite food?",
+          "correctAnswers": ["Pizza"],
+          "choices": ["Chicken Strips", "Pizza", "Vegetables"]
+        },
+        {
+          "questionType": "true-false",
+          "question": "Winter is coming.",
+          "correctAnswers": ["true"],
+          "choices": ["True", "False"]
+        },
+        {
+          "questionType": "text-based",
+          "question": "Is it 2020 yet?",
+          "correctAnswers": ["yes", "sure", "of course", "yup"]
+        }
+      ]
+    };
 
-    // helper function to make element creation less verbose elsewhere
+    // helper function to make element creation less verbose
     function createElement(tagName, attributes) {
       let el = document.createElement(tagName);
       // overwrite any element defaults attributes argument values and return the element
@@ -56,6 +61,7 @@
     // helper function to clear a div
     function clearChildren(element) {
       while (element.lastChild) {
+        // keep removing last child element as long as one exists
         element.removeChild(element.lastChild);
       }
     }
@@ -63,8 +69,7 @@
     /*
       This class uses a factory pattern to return a question
       object based on the type of question asked for.
-      Only multiple choice and true/false are supported but
-      adding text-based questions will be trivial now.
+      Muliple-choice, true-false, and text-based supported.
     */
     class QuestionFactory {
       // return question object based on question type
@@ -73,8 +78,12 @@
           case "multiple-choice":
           case "true-false":
             // true-false is just a special case of multiple choice
-            // they both can use the same type of object
+            // they both can be represented by the same type of object
             return new MultipleChoice(questionConfig);
+            break;
+          case "text-based":
+            return new TextBased(questionConfig);
+            break;
           default:
             break;
         }
@@ -111,7 +120,7 @@
 
       get stats() {
         // this function maps the historical results for the session
-        // and returns them along with an overall score for each attempt
+        // and returns them along with an overall score for all attempts
         const attempts = this._results.map((result, index) => {
           // each result here represents one attempt at the quiz
           const correct = result.questionCount - result.errors.length;
@@ -143,9 +152,9 @@
 
       addResult(result) {
         // determine how many attempts have been made
-        const attemptNumber = this._results.length + 1;
-        // add the attempt number to the result
-        result = Object.assign(result, { attempt: attemptNumber });
+        const attemptCount = this._results.length + 1;
+        // add the attempt count to the result
+        result = Object.assign(result, { attempt: attemptCount });
         // prepend the result to the front of the results array
         // this is done so that we can see most recent attempt first
         this._results.unshift(result);
@@ -170,45 +179,37 @@
 
     /*
       This class defines a multiple choice question and is able
-      to produce the correct DOM node. It will later have a function
-      to verify the selected answer against the questionConfig's
-      correct answer property.
+      to produce the correct DOM node and validate user input.
     */
     class MultipleChoice {
       constructor(questionConfig) {
-        this.questionType = questionConfig.questionType;
-        this.question = questionConfig.question;
-        this.correctAnswer = questionConfig.correctAnswer;
-        this.choices = questionConfig.choices;
+        // assign properties of question config to this object
+        Object.assign(this, questionConfig);
+        // id will be the type of question and the question index
+        this.id = "";
+        // group name to use when naming our elements
         this.groupName = "";
-
-        // if no choices were specified, we must be dealing
-        // with a true false question so we will add those
-        // two choices here. 
-        if (this.choices.length === 0) {
-          this.choices = this.choices.concat(["True", "False"]);
-        }
       }
 
       // function to create dom node with question and radio buttons
       render(index) {
-        index = index || 0;
         // create a unique id for the wrapper and radio group to use
-        const id = `${this.questionType}-${index}`;
+        this.id = `${this.questionType}-${index}`;
+        // create a groupname for the radio buttons
+        this.groupName = `${this.id}-choice`;
 
         // create a div for the wrapper, question, and choices
         const wrapperDiv = createElement("div", {
-          id: id,
+          id: this.id,
           className: "question"
         });
+        // div with the question text inside
         const questionDiv = createElement("div", {
           className: "question-text",
           innerText: this.question
         });
+        // div to hold all the radio inputs
         const choicesDiv = createElement("div", { className: "choices" });
-
-        // create a groupname for the radio buttons
-        this.groupName = `${id}-choice`;
 
         wrapperDiv.appendChild(questionDiv);
         wrapperDiv.appendChild(choicesDiv);
@@ -227,12 +228,14 @@
           const label = createElement("label", { htmlFor: radioId });
           label.appendChild(document.createTextNode(choice));
 
+          // create div for radio input and append to choices
           const choiceDiv = createElement("div", { className: "choice" });
           choiceDiv.appendChild(input);
           choiceDiv.appendChild(label);
           choicesDiv.appendChild(choiceDiv);
         });
 
+        // return the entire question node
         return wrapperDiv;
       }
 
@@ -256,33 +259,84 @@
         // compare the value of the radio item to the correct answer
         return (
           selectedAnswer.value.toLowerCase() ===
-          this.correctAnswer.toLowerCase()
+          this.correctAnswers[0].toLowerCase()
         );
+      }
+    }
+
+    /*
+      This class defines a text-based question and is able
+      to produce the correct DOM node and validate user input.
+    */
+    class TextBased {
+      constructor(questionConfig) {
+        // assign properties of question config to this object
+        Object.assign(this, questionConfig);
+        this.id = ""; // id for question itself
+        this.inputId = ""; // id for input box
+      }
+
+      // function to create dom node with question and radio buttons
+      render(index) {
+        // id will be the type of question and the question index
+        this.id = `${this.questionType}-${index}`;
+        // input id will have question id with -text appended
+        this.inputId = `${this.id}-text`;
+
+        // create a wrapper div to hold the question and input box
+        const wrapperDiv = createElement("div", {
+          id: this.id,
+          className: "question"
+        });
+
+        // div with the question text inside
+        const questionDiv = createElement("div", {
+          className: "question-text",
+          innerText: this.question
+        });
+
+        // create a div to hold the answer input element
+        const inputDiv = createElement("div", { className: "userText" });
+        const inputElement = createElement("input", {
+          type: "text",
+          id: this.inputId
+        });
+        inputDiv.appendChild(inputElement);
+
+        // place input element in question div
+        wrapperDiv.appendChild(questionDiv);
+        wrapperDiv.appendChild(inputDiv);
+
+        // return the entire question node
+        return wrapperDiv;
+      }
+
+      // function to validate given answer against correct answer from config
+      validate() {
+        const inputElement = document.getElementById(this.inputId);
+        const userAnswer = inputElement.value.trim();
+        // make regex to match against any accepted answer
+        const regex = new RegExp(this.correctAnswers.join("|"));
+
+        // return result of regex test against user input
+        return regex.test(userAnswer);
       }
     }
 
     function renderQuestions() {
       // clear questions from last quiz attempt
       quizService.clearQuestions();
-
-      questionPool.forEach(item => {
-        // destructure the array item from the pool
-        let [questionType, question, correctAnswer, ...choices] = item;
-
-        // create a "questionConfig" object to send to factory
-        const questionConfig = {
-          questionType: questionType,
-          question: question,
-          correctAnswer: correctAnswer,
-          choices: choices
-        };
-
-        // add factory-created question to this quiz session
-        quizService.addQuestion(questionFactory.create(questionConfig));
+      
+      // iterate questions from the questionPool JSON
+      questionPool.questions.forEach(item => {
+        // pass item to factory to create correct question type object
+        const question = questionFactory.create(item);
+        // add our factory-created question to the quiz service
+        quizService.addQuestion(question);
       });
 
       quizService.questions.forEach((question, index) => {
-        // loop through each question and call its render method
+        // loop through each question and call its render method.
         // index is passed in to ensure unique element ids and names
         const questionNode = question.render(index);
         // append the question to the app div
@@ -291,7 +345,7 @@
     }
 
     function checkAnswers() {
-      // get the number of errors and question count for this attempt
+      // get the number of errors and a question count for this attempt
       const errors = quizService.validateQuestions();
       const questionCount = quizService.questionCount;
       return { errors, questionCount };
@@ -317,6 +371,7 @@
     }
 
     function renderStats() {
+      // get referenct to the stats div
       const statsDiv = document.getElementById("stats");
 
       // get the calculated stats from the quiz service
@@ -367,7 +422,7 @@
         renderQuestions(quizService, questionFactory);
 
         // the finish button will be used to check the quiz
-        // answers and return to the home "mode" that shows 
+        // answers and return to the home "mode" that shows
         // the start button and stats
         createFinishButton(quizService);
 
@@ -382,7 +437,7 @@
     function setDisplayMode(mode) {
       // this function switches between "home mode" and "quiz mode"
       // the reason for this is so we don't have to create multiple
-      // pages.  it is a pseudo-spa app
+      // pages.  this will be a single page application
       const homeSection = document.getElementById("home-section");
       const quizSection = document.getElementById("quiz-section");
       const questionsDiv = document.getElementById("questions");
@@ -399,7 +454,7 @@
           clearChildren(statsDiv);
           break;
         case "quiz":
-          // in quiz mode we want to display quiz elements like
+          // in quiz mode we only want to display quiz elements like
           // questions and the check answer button
           homeSection.classList.add("hidden");
           quizSection.classList.remove("hidden");
@@ -417,9 +472,10 @@
     }
 
     function createFinishButton() {
-      // this button is used to score the quiz
+      // reference to div that will hold the finish button
       const finish = document.getElementById("finish");
-
+      
+      // this button is used to score the quiz
       const finishButton = createElement("button", {
         id: "checkAnswers",
         innerText: "Check Answers"
