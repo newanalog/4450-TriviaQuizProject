@@ -10,46 +10,59 @@
   <script>
     // declare a service to hold state of this quiz session
     let quizService;
+    // declare a service to hold user quiz results
+    let statService;
     // declare a factory that can dynamically create questions based on type
     let questionFactory;
+    // declare a timer service because we only ever want one timer running
+    let timerService;
 
     window.onload = function() {
-      // instantiate our service and factory after the window loads
+      // instantiate our services and factory after the window loads
       quizService = new QuizService();
+      statService = new StatService();
       questionFactory = new QuestionFactory();
+      timerService = new TimerService();
 
       createAppStructure(); // create skeleton of page
-      createStartButton(); // creating start button which has an event to kick things off
+      createMenuItems(); // creating start button which has an event to kick things off
     };
 
     // JSON formatted question pool that can serialized elsewhere if needed
-    const questionPool = {
-      "questions": [
-        {
-          "questionType": "multiple-choice",
-          "question": "What is your favorite color?",
-          "correctAnswers": ["Red"],
-          "choices": ["Green", "Blue", "Red"]
-        },
-        {
-          "questionType": "multiple-choice",
-          "question": "What is your favorite food?",
-          "correctAnswers": ["Pizza"],
-          "choices": ["Chicken Strips", "Pizza", "Vegetables"]
-        },
-        {
-          "questionType": "true-false",
-          "question": "Winter is coming.",
-          "correctAnswers": ["true"],
-          "choices": ["True", "False"]
-        },
-        {
-          "questionType": "text-based",
-          "question": "Is it 2020 yet?",
-          "correctAnswers": ["yes", "sure", "of course", "yup"]
-        }
-      ]
-    };
+    // Most questions come from open trivia database at https://opentdb.com/
+    const questionPool = {"questions": [
+      {"correctAnswers":["Hats"],"choices":["Belts","Shoes","Shirts","Hats"],"questionType":"multiple-choice","question":"What does a milliner make and sell?"}
+      ,{"correctAnswers":["A Tight Rope"],"choices":["A Tight Rope","Broken Glass","The Moon","Balls"],"questionType":"multiple-choice","question":"What does a funambulist walk on?"}
+      ,{"correctAnswers":["Watch"],"choices":["Money","Keys","Notebook","Watch"],"questionType":"multiple-choice","question":"In past times, what would a gentleman keep in his fob pocket?"}
+      ,{"correctAnswers":["True"],"choices":["True","False"],"questionType":"true-false","question":"Gumbo is a stew that originated in Louisiana."}
+      ,{"correctAnswers":["False"],"choices":["False","True"],"questionType":"true-false","question":"The vapor produced by e-cigarettes is actually water."}
+      ,{"correctAnswers":["Yale University"],"choices":["Yale University","Columbia University","Harvard University","Princeton University"],"questionType":"multiple-choice","question":"Which of the following Ivy League universities has its official motto in Hebrew as well as in Latin?"}
+      ,{"correctAnswers":["Rock Band"],"choices":["Dance Dance Revolution","Beast Mode Mania","Rock Band","Guitar Hero Live"],"questionType":"multiple-choice","question":"Which one of the following rhythm games was made by Harmonix?"}
+      ,{"correctAnswers":["True"],"choices":["False","True"],"questionType":"true-false","question":"Furby was released in 1998."}
+      ,{"correctAnswers":["Licorice"],"choices":["Licorice","Bubblegum","Chocolate","Lollipop"],"questionType":"multiple-choice","question":"Red Vines is a brand of what type of candy?"}
+      ,{"correctAnswers":["Kip"],"choices":["Ruble","Kip","Konra","Dollar"],"questionType":"multiple-choice","question":"What is the unit of currency in Laos?"}
+      ,{"correctAnswers":["False"],"choices":["False","True"],"questionType":"true-false","question":"A scientific study on peanuts in bars found traces of over 100 unique specimens of urine."}
+      ,{"correctAnswers":["Niagara Mohawk Building"],"choices":["Niagara Mohawk Building","Taipei 101","Westendstrasse 1","One Detroit Center"],"questionType":"multiple-choice","question":"Which of the following buildings is example of a structure primarily built in the Art Deco architectural style?"}
+      ,{"correctAnswers":["OCBC"],"choices":["OCBC","HSBC","Standard Chartered","Bank of China"],"questionType":"multiple-choice","question":"Which of these banks are NOT authorized to issue currency notes in Hong Kong?"}
+      ,{"correctAnswers":["Fiat"],"choices":["Alfa Romeo","Fiat","Maserati","Ferrari"],"questionType":"multiple-choice","question":"Which Italian automobile manufacturer gained majority control of U.S. automobile manufacturer Chrysler in 2011?"}
+      ,{"correctAnswers":["Pink"],"choices":["Yellow","Blue","Pink","Green"],"questionType":"multiple-choice","question":"Which of these colours is NOT featured in the logo for Google?"}
+      ,{"correctAnswers":["False"],"choices":["False","True"],"questionType":"true-false","question":"The Sun rises from the North."}
+      ,{"correctAnswers":["True"],"choices":["True","False"],"questionType":"true-false","question":"The color orange is named after the fruit."}
+      ,{"correctAnswers":["True"],"choices":["False","True"],"questionType":"true-false","question":"When you cry in space, your tears stick to your face."}
+      ,{"correctAnswers":["Southeast"],"choices":["Southwest","Southeast","Northwest","Northeast"],"questionType":"multiple-choice","question":"What direction does the Statue of Liberty face?"}
+      ,{"correctAnswers":["Kentucky Fried Chicken"],"choices":["Kentucky Fresh Cheese","Kiwi Food Cut","Kentucky Fried Chicken","Kibbled Freaky Cow"],"questionType":"multiple-choice","question":"What do the letters of the fast food chain KFC stand for?"}
+      ,{"correctAnswers":["2004"],"choices":["2000","2006","2001","2004"],"questionType":"multiple-choice","question":"What year was the RoboSapien toy robot released?"}
+      ,{"correctAnswers":["Bank of Italy"],"choices":["Bank of Charlotte","Bank of Italy","Bank of Long Island","Bank of Pennsylvania"],"questionType":"multiple-choice","question":"What was Bank of America originally established as?"}
+      ,{"correctAnswers":["Hewlett-Packard"],"choices":["Asus","Toshiba","Hewlett-Packard","Dell"],"questionType":"multiple-choice","question":"Computer manufacturer Compaq was acquired for $25 billion dollars in 2002 by which company?"}
+      ,{"correctAnswers":["Sal Khan"],"choices":["Kitt Khan","Ben Khan","Adel Khan","Sal Khan"],"questionType":"multiple-choice","question":"Who founded the Khan Academy?"}
+      ,{"correctAnswers":["South America"],"choices":["Europe","South America","Hawaii","Asia"],"questionType":"multiple-choice","question":"Where did the pineapple plant originate?"}
+      ,{"correctAnswers":["Brazil"],"choices":["South Korea","Brazil","China","United States of America"],"questionType":"multiple-choice","question":"Which country, not including Japan, has the most people of Japanese decent?"}
+      ,{"correctAnswers":["Finding shapes in clouds"],"choices":["Swimming in freezing water","Sleeping with your eyes open","Finding shapes in clouds","Breaking glass with your voice"],"questionType":"multiple-choice","question":"Nephelococcygia is the practice of doing what?"}
+      ,{"correctAnswers":["Belgium"],"choices":["Belgium","Netherlands","USA","France"],"questionType":"multiple-choice","question":"Which country has the most Trappist breweries?"}
+      ,{"correctAnswers":["Złoty"],"choices":["Ruble","Krone","Euro","Złoty"],"questionType":"multiple-choice","question":"What is the currency of Poland?"}
+      ,{"correctAnswers":["Dogs"],"choices":["Flying","Birds","Germs","Dogs"],"questionType":"multiple-choice","question":"What is Cynophobia the fear of?"}
+      ,{"correctAnswers":["Trees"],"choices":["Vegetables","Flowers","Grains","Trees"],"questionType":"multiple-choice","question":"If you planted the seeds of Quercus robur, what would grow?"}
+      ,{"correctAnswers":["True"],"choices":["True","False"],"questionType":"true-false","question":"Slovakia is a member of European Union."}]};
 
     // helper function to make element creation less verbose
     function createElement(tagName, attributes) {
@@ -90,32 +103,23 @@
       }
     }
 
-    /*
-      This class uses a repository pattern to store questions
-      in an array for a quiz session.  Encapsulating this makes
-      it easier to switch over to using a database later.
-    */
-    class QuizService {
+    /* 
+      This object is used to hold store and retrieve
+      user quiz attempt results
+    */ 
+    class StatService {
       constructor() {
-        // array to hold questions for this quiz session
-        this._questions = [];
         this._results = [];
       }
 
-      addQuestion(question) {
-        // the questions array is in memory now, but this could
-        // easily call into an api
-        return this._questions.push(question);
-      }
-
-      // return all questions for this session as a getter property
-      get questions() {
-        return this._questions;
-      }
-
-      // return the number of questions
-      get questionCount() {
-        return this._questions.length;
+      addResult(result) {
+        // determine how many attempts have been made
+        const attemptCount = this._results.length + 1;
+        // add the attempt count to the result
+        result = Object.assign(result, { attempt: attemptCount });
+        // prepend the result to the front of the results array
+        // this is done so that we can see most recent attempt first
+        this._results.unshift(result);
       }
 
       get stats() {
@@ -144,21 +148,77 @@
         // score across all attempts
         return { attempts, overallScore };
       }
+    }
+
+    /*
+      This object uses a repository pattern to store questions
+      in an array for a quiz session.  Encapsulating this makes
+      it easier to switch over to using a database later.
+    */
+    class QuizService {
+      constructor() {
+        // array to hold questions for this quiz session
+        this._questions = [];
+        // this._results = [];
+      }
+
+      addQuestion(question) {
+        // the questions array is in memory now, but this could
+        // easily call into an api
+        return this._questions.push(question);
+      }
+
+      // return all questions for this session as a getter property
+      get questions() {
+        return this._questions;
+      }
+
+      // return the number of questions
+      get questionCount() {
+        return this._questions.length;
+      }
+
+      // get stats() {
+      //   // this function maps the historical results for the session
+      //   // and returns them along with an overall score for all attempts
+      //   const attempts = this._results.map((result, index) => {
+      //     // each result here represents one attempt at the quiz
+      //     const correct = result.questionCount - result.errors.length;
+      //     const missed = result.errors.length;
+      //     const score = Math.round((correct / result.questionCount) * 100);
+      //     return {
+      //       attempt: result.attempt,
+      //       correct: correct,
+      //       missed: missed,
+      //       totalQuestions: result.questionCount,
+      //       score: score
+      //     };
+      //   });
+
+      //   // this reduction just aggregates the sum of attempt scores to use in
+      //   // the overall score calculation
+      //   const scoreSum = attempts.reduce((acc, curr) => acc + curr.score, 0);
+      //   const overallScore = Math.round(scoreSum / attempts.length);
+
+      //   // returns an array with stats for each attempt as well as overall
+      //   // score across all attempts
+      //   return { attempts, overallScore };
+      // }
 
       // empties out questions array
       clearQuestions() {
         this._questions = [];
       }
 
-      addResult(result) {
-        // determine how many attempts have been made
-        const attemptCount = this._results.length + 1;
-        // add the attempt count to the result
-        result = Object.assign(result, { attempt: attemptCount });
-        // prepend the result to the front of the results array
-        // this is done so that we can see most recent attempt first
-        this._results.unshift(result);
-      }
+      // addResult(result) {
+      //   // determine how many attempts have been made
+      //   const attemptCount = this._results.length + 1;
+      //   // add the attempt count to the result
+      //   result = Object.assign(result, { attempt: attemptCount });
+      //   // prepend the result to the front of the results array
+      //   // this is done so that we can see most recent attempt first
+      //   this._results.unshift(result);
+      // }
 
       validateQuestions() {
         const errors = [];
@@ -292,7 +352,7 @@
         // div with the question text inside
         const questionDiv = createElement("div", {
           className: "question-text",
-          innerText: this.question
+          innerHTML: this.question
         });
 
         // create a div to hold the answer input element
@@ -323,17 +383,31 @@
       }
     }
 
-    function renderQuestions() {
+    function renderQuestions(count, time) {
       // clear questions from last quiz attempt
       quizService.clearQuestions();
+
+      // get number of questions from the questionPool JSON
+      const randomQuestions = getRandomQuestions(count);
       
       // iterate questions from the questionPool JSON
-      questionPool.questions.forEach(item => {
+      randomQuestions.forEach(item => {
         // pass item to factory to create correct question type object
         const question = questionFactory.create(item);
         // add our factory-created question to the quiz service
         quizService.addQuestion(question);
       });
+
+      // get reference to div that holds the timer
+      const timerDiv = document.getElementById("timer-wrapper");
+      // if they requested a time limit...
+      if (time > 0) {
+        timerDiv.classList.remove("hidden"); // show the timer div
+        timerService.create(time); // create timer with requested limit
+        timerService.start(); // start the timer
+      } else {
+        timerDiv.classList.add("hidden"); // don't show the timer div
+      }
 
       quizService.questions.forEach((question, index) => {
         // loop through each question and call its render method.
@@ -342,6 +416,27 @@
         // append the question to the app div
         document.getElementById("questions").appendChild(questionNode);
       });
+    }
+
+    function getRandomQuestions(count) {
+      // array to hold the selected questions
+      const result = [];
+      // get a copy of the questions so we aren't using the original array
+      const candidates = [...questionPool.questions];
+
+      // for as many questions as they asked for
+      for(let i = 0; i < count; i++)
+      {
+        // get an int representing some index of the question array
+        const rand = Math.floor(Math.random() * (candidates.length));
+        // select and remove the question at that index so it 
+        // doesn't get picked twice
+        const picked = candidates.splice(rand, 1)[0];
+        // place the question into our results
+        result.push(picked);
+      }
+
+      return result; // return the randomly selected questions
     }
 
     function checkAnswers() {
@@ -356,26 +451,35 @@
       // the sections and divs here will be used to hold quiz elements
       const main = createElement("main");
       const homeSection = createElement("section", { id: "home-section" });
-      const quizSection = createElement("section", { id: "quiz-section" });
+      const quizSection = createElement("section", { id: "quiz-section", className: "hidden" });
       const statsDiv = createElement("div", { id: "stats" });
       const startDiv = createElement("div", { id: "start" });
+      const settingsDiv = createElement("div", {id: "settings"})
       const questionsDiv = createElement("div", { id: "questions" });
       const finishDiv = createElement("div", { id: "finish" });
-      homeSection.appendChild(statsDiv);
+      const timerDiv = createElement("div", {id: "timer-wrapper"});
+
+      homeSection.appendChild(settingsDiv);
       homeSection.appendChild(startDiv);
+      homeSection.appendChild(statsDiv);
+      
+      quizSection.appendChild(timerDiv);
       quizSection.appendChild(questionsDiv);
       quizSection.appendChild(finishDiv);
+      // being a single page app, there are two display modes:
+      // home - to set quiz options, display results, and start the quiz
+      // quiz - to display the questions and timer
       main.appendChild(homeSection);
       main.appendChild(quizSection);
       document.body.appendChild(main);
     }
 
     function renderStats() {
-      // get referenct to the stats div
+      // get reference to the stats div
       const statsDiv = document.getElementById("stats");
 
       // get the calculated stats from the quiz service
-      const stats = quizService.stats;
+      const stats = statService.stats;
 
       // if there were no attempts, we have nothing to do here
       if (stats.attempts.length === 0) {
@@ -385,7 +489,8 @@
       // create a wrapper for the stats and append the overall score
       const listWrapper = createElement("div", { id: "stats-wrapper" });
       const overallScore = createElement("div", {
-        innerText: `Overall Score: ${stats.overallScore}%`
+        innerText: `Overall Score: ${stats.overallScore}%`,
+        className: "overall-score"
       });
 
       listWrapper.appendChild(overallScore);
@@ -405,7 +510,26 @@
       statsDiv.appendChild(listWrapper);
     }
 
-    function createStartButton() {
+    // add elements to the home screen, variable names are self-descriptive
+    function createMenuItems() {
+      const settingsDiv = document.getElementById("settings");
+      const configCountDiv = createElement("div");
+      const configTimeDiv = createElement("div");
+      const countLabel = createElement("label", {innerText: "Number of questions:", className: "config-label"});
+      const countInput = createElement("input", {id: "question-count-config", className: "config-input", type: "number", min: 1, max: 15, defaultValue: 5});
+      const timeLabel = createElement("label", {innerText: "Time Limit in minutes (0 for untimed):", className: "config-label"});
+      const timeInput = createElement("input", {id: "question-time-config", className: "config-input", type: "number", min: 0, max: 5, defaultValue: 0});
+      
+      configCountDiv.appendChild(countLabel);
+      configCountDiv.appendChild(countInput);
+      
+      configTimeDiv.appendChild(timeLabel);
+      configTimeDiv.appendChild(timeInput);
+
+      settingsDiv.appendChild(configCountDiv);
+      settingsDiv.appendChild(configTimeDiv);
+
+
       // this is the start button to begin a quiz attempt
       const startDiv = document.getElementById("start");
       const startButton = createElement("button", {
@@ -418,8 +542,8 @@
         // and displays a quiz
         setDisplayMode("quiz");
 
-        // render each question from the pool on page load
-        renderQuestions(quizService, questionFactory);
+        // pass user quiz parameters to renderQuestion function
+        renderQuestions(countInput.value, timeInput.value);
 
         // the finish button will be used to check the quiz
         // answers and return to the home "mode" that shows
@@ -441,15 +565,17 @@
       const homeSection = document.getElementById("home-section");
       const quizSection = document.getElementById("quiz-section");
       const questionsDiv = document.getElementById("questions");
+      const timerDiv = document.getElementById("timer-wrapper");
       const finishDiv = document.getElementById("finish");
       const statsDiv = document.getElementById("stats");
       switch (mode) {
         case "home":
-          // in home mode we want to display the start button and stats
-          // and hide the quiz elements
+          // in home mode we want to display the settings, start button,
+          // and stats and hide the quiz elements
           homeSection.classList.remove("hidden");
           quizSection.classList.add("hidden");
           clearChildren(questionsDiv);
+          clearChildren(timerDiv);
           clearChildren(finishDiv);
           clearChildren(statsDiv);
           break;
@@ -487,8 +613,11 @@
         const result = checkAnswers();
         // if we want to do anything with the results before returning
         // to the home mode, we could do that here.  we don't for now.
-        quizService.addResult(result);
+        statService.addResult(result);
 
+        // clean up running timer
+        timerService.clear();
+        
         // reset the display to the home mode with the start button and stats
         restart();
       });
@@ -507,6 +636,75 @@
       // clicking the button resets the screen
       quitButton.addEventListener("click", restart);
       finish.appendChild(quitButton);
+    }
+
+    function disableInputs() {
+      const questionsDiv = document.getElementById("questions");
+      // get all input elements in the questions div and disable them
+      const inputs = questionsDiv.querySelectorAll("input");
+      inputs.forEach(i => i.disabled=true);
+    }
+
+    // Timer object to function as our clock, takes a number
+    // of minutes as its only parameter and counts down on start
+    class TimerService {
+      create(minutes) {
+        this.clear(); // clear any orphaned setIntervals
+
+        this.minutes = minutes;
+        this.remain = minutes * 60; // remain starts with total seconds
+        this.timerDiv = document.getElementById("timer-wrapper");
+        // create and insert our clock
+        this.clock = createElement("div", {id: "clock"});
+
+        this.timerDiv.appendChild(this.clock);
+        // initialize display with starting time
+        this.updateDisplay(this.remain);
+      }
+
+      clear() {
+        if (this.interval) {
+          // use reference received from setInterval to stop the clock
+          clearInterval(this.interval);
+          // remove the clock
+          clearChildren(this.timerDiv);
+        }
+      }
+
+      // helper function to calculate current timer value and update display
+      updateDisplay(value) {
+        // minutes are value (seconds) divided by 60 to get minutes remaining
+        const minutes = `0${parseInt(value / 60)}`;
+        // remainder mod 60 will be our seconds
+        const seconds = `0${parseInt(value % 60)}`;
+        // substring our zero-prepended values to keep from if-ing the 10's place
+        const minuteDisplay = minutes.substring(minutes.length-2);
+        const secondDisplay = seconds.substring(seconds.length-2);
+        const display = `${minuteDisplay}:${secondDisplay}`;
+        this.clock.innerText = display; // update the clock text
+      }
+
+      start() {
+        this.interval = setInterval(() => {
+          // set our current remaining time value
+          this.updateDisplay(this.remain);
+          // decrement the remaing seconds by 1
+          this.remain--;
+
+          if (this.remain < 30) {
+            // css class to turn the clock red as 30-second warning
+            this.clock.classList.add("timer-warning");
+          }
+
+          if (this.remain < 0) {
+            // if the timer is done, stop the setInterval function
+            clearInterval(this.interval);
+            disableInputs();  // no more answers allowed now
+            // clear the warning css
+            this.clock.classList.remove("timer-warning");
+          }
+        }, 1000)
+      }
     }
   </script>
 </html>
