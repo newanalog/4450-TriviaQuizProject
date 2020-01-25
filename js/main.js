@@ -21,21 +21,32 @@ window.onload = function () {
 function createAppStructure() {
   // this function just builds the page layout
   // the sections and divs here will be used to hold quiz elements
-  const main = createElement("main");
+
+  // create header with project name
+  const header = createElement("header");
+  const banner = createElement("h1", { id: "site-header", innerText: "Trivia Project", className: "home-header" });
+  header.appendChild(banner);
+  document.body.appendChild(header);
+
+  const main = createElement("main"); // main wrapper div for app
   const homeSection = createElement("section", { id: "home-section" });
   const quizSection = createElement("section", {
     id: "quiz-section",
     className: "hidden"
-  });
-  const statsDiv = createElement("div", { id: "stats" });
-  const startDiv = createElement("div", { id: "start" });
+  }); // sections to act as home mode and section for quiz mode
+
   const settingsDiv = createElement("div", { id: "settings" });
+  const startDiv = createElement("div", { id: "start" });
+  const clearDiv = createElement("div", { id: "clear" });
+  const statsDiv = createElement("div", { id: "stats" });
+  
+  const timerDiv = createElement("div", { id: "timer-wrapper" });
   const questionsDiv = createElement("div", { id: "questions" });
   const finishDiv = createElement("div", { id: "finish" });
-  const timerDiv = createElement("div", { id: "timer-wrapper" });
-
+  
   homeSection.appendChild(settingsDiv);
   homeSection.appendChild(startDiv);
+  homeSection.appendChild(clearDiv);
   homeSection.appendChild(statsDiv);
 
   quizSection.appendChild(timerDiv);
@@ -95,6 +106,16 @@ function createMenuItems() {
     innerText: "Start Quiz"
   });
 
+  // this is clear button to clear quiz history
+  const clearDiv = document.getElementById("clear");
+  const clearButton = createElement("button", {
+    id: "clear-button",
+    innerText: "Clear Results"
+  })
+
+  // write historical stats, if any
+  renderStats();
+
   startButton.addEventListener("click", event => {
     // clicking the start button hides the home section
     // and displays a quiz
@@ -113,13 +134,26 @@ function createMenuItems() {
     createQuitButton();
   });
 
-  startDiv.appendChild(startButton);
+  startDiv.appendChild(startButton); // add start button to screen
+
+  clearButton.addEventListener("click", event => {
+    // clear items from stats list and clear history with stat service
+    const statsDiv = document.getElementById("stats");
+    clearChildren(statsDiv);
+    statService.clearHistory();
+  });
+
+  clearDiv.appendChild(clearButton); // add clear button to screen
 }
 
 function setDisplayMode(mode) {
+  // changing modes, scroll to top
+  window.scrollTo({ top: 0 });
+
   // this function switches between "home mode" and "quiz mode"
   // the reason for this is so we don't have to create multiple
   // pages.  this will be a single page application
+  const siteHeader = document.getElementById("site-header");
   const homeSection = document.getElementById("home-section");
   const quizSection = document.getElementById("quiz-section");
   const questionsDiv = document.getElementById("questions");
@@ -128,6 +162,9 @@ function setDisplayMode(mode) {
   const statsDiv = document.getElementById("stats");
   switch (mode) {
     case "home":
+      // change to larger header in home mode
+      siteHeader.classList.remove("quiz-header");
+      siteHeader.classList.add("home-header");
       // in home mode we want to display the settings, start button,
       // and stats and hide the quiz elements
       homeSection.classList.remove("hidden");
@@ -138,6 +175,9 @@ function setDisplayMode(mode) {
       clearChildren(statsDiv);
       break;
     case "quiz":
+      // change to smaller site header for quiz mode
+      siteHeader.classList.add("quiz-header");
+      siteHeader.classList.remove("home-header");
       // in quiz mode we only want to display quiz elements like
       // questions and the submit answer button
       homeSection.classList.add("hidden");
@@ -154,6 +194,11 @@ function getRandomQuestions(count) {
   const result = [];
   // get a copy of the questions so we aren't using the original array
   const candidates = [...questionPool.questions];
+
+  if (count > candidates.length) {
+    // don't allow more questions than we have in the pool
+    count = candidates.length;
+  }
 
   // for as many questions as they asked for
   for (let i = 0; i < count; i++) {
@@ -172,6 +217,19 @@ function getRandomQuestions(count) {
 function renderQuestions(count, time) {
   // clear questions from last quiz attempt
   quizService.clearQuestions();
+
+    // get rid of any decimals, we want a whole number
+    count = Math.floor(count);
+
+    if (count < 1 || isNaN(count)) {
+      // don't allow 0 questions or non-numeric count
+      count = 1;
+    }
+    
+    if (time < 0 || isNaN(time)) {
+      // minimum time is 0 for no timer and disallow non-numerics
+      time = 0;
+    }
 
   // get number of questions from the questionPool JSON
   const randomQuestions = getRandomQuestions(count);

@@ -4,23 +4,56 @@
 */
 class StatService {
   constructor() {
-    this._results = [];
+    // store this as variable to avoid typos when referencing later
+    this.storageKey = "triviaQuizResults";
+
+    // get our historical results if they exist
+    const storageValue = localStorage.getItem(this.storageKey);
+
+    if (storageValue == null) {
+      // if we haven't stored the values before, initialize with empty array
+      localStorage.setItem(this.storageKey, JSON.stringify([]));
+    }
+  }
+
+  clearHistory() {
+    // remove our local storage key
+    localStorage.removeItem(this.storageKey);
+  }
+
+  getStoredResults() {
+    // get the stored local storage string and parse it as JSON
+    const storageValue = localStorage.getItem(this.storageKey);
+    let parsed;
+    try {
+      // parse the result if possible, else return empty array
+      parsed = JSON.parse(storageValue) || [];
+    } catch (e) {
+      // no logger service here, if there was an error, we
+      // most likely just didn't have any historical results
+      parsed = [];
+    }
+    return parsed;
   }
 
   addResult(result) {
+    // get current stored results
+    const historicalResults = this.getStoredResults();
     // determine how many attempts have been made
-    const attemptCount = this._results.length + 1;
+    const attemptCount = historicalResults.length + 1;
     // add the attempt count to the result
     result = Object.assign(result, { attempt: attemptCount });
-    // prepend the result to the front of the results array
-    // this is done so that we can see most recent attempt first
-    this._results.unshift(result);
+    
+    // add the new result to the front of the array
+    historicalResults.unshift(result);
+    // store our updated array as a string in local storage
+    localStorage.setItem(this.storageKey, JSON.stringify(historicalResults));
   }
 
   get stats() {
     // this function maps the historical results for the session
     // and returns them along with an overall score for all attempts
-    const attempts = this._results.map((result, index) => {
+    const attempts = this.getStoredResults().map((result) => {
       // each result here represents one attempt at the quiz
       const correct = result.questionCount - result.errors.length;
       const missed = result.errors.length;
