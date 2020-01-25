@@ -9,12 +9,13 @@
 html {
   max-width: 960px;
   min-width: 340px;
-  margin: auto;
+  margin: 0 auto;
   font-family: sans-serif;
+  color: #333333;
 }
 
 main {
-  margin-top: 1.5em;
+  margin-top: 0;
 }
 
 button {
@@ -24,21 +25,14 @@ button {
   padding: 10px;
   border-radius: 5px;
   border: none;
-  background-image: linear-gradient(00deg, #ff5858 60%, #f09819 100%);
   font-size: 0.9em;
   outline: none;
   color: #fff;
 }
 
 #stats-wrapper {
-  overflow-y: hidden;
-  max-height: 200px;
-  width: 12em;
-  margin: auto;
-}
-
-#stats-wrapper:hover {
-  overflow-y: auto;
+  width: 20em;
+  margin: 20px auto;
 }
 
 #stats-list {
@@ -49,32 +43,37 @@ button {
   line-height: 2em;
 }
 
-#stats, #start, #finish {
+.overall-score {
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+#home-section, #finish {
   text-align: center;
 }
 
-#startButton {
+#start-button {
   background-image: linear-gradient(to top, #0ba360 0%, #3cba92 100%);
 }
 
-#startButton:active:hover {
-  background-image: linear-gradient(to top, #0ba360 0%, #3cba92 100%);
+#start-button:active:hover {
+  background-image: linear-gradient(to top, #0ba360 30%, #3cba92 100%);
 }
 
-#checkAnswers {
-  background-image: linear-gradient(-60deg, #ff5858 0%, #f09819 100%);
+#submit-answers {
+  background-image: linear-gradient(to top, #ff5858 0%, #f09819 100%);
 }
 
-#checkAnswers:active:hover {
-  background-image: linear-gradient(-60deg, #ff5858 0%, #f09819 100%);
+#submit-answers:active:hover {
+  background-image: linear-gradient(to top, #ff5858 30%, #f09819 100%);
 }
 
-#quitButton {
-  background-image: linear-gradient(to right, #868f96 0%, #596164 100%);
+#quit-button {
+  background-image: linear-gradient(to bottom, #868f96 0%, #596164 100%);
 }
 
-#quitButton:active:hover{
-  background-image: linear-gradient(to right, #868f96 0%, #596164 100%);
+#quit-button:active:hover{
+  background-image: linear-gradient(to bottom, #868f96 3%, #596164 100%);
 }
 
 #questions > div {
@@ -120,4 +119,39 @@ button {
   border-radius: 4px;
   border: solid 1px #dcdcdc;
   margin-bottom: 5px;
+}
+
+#settings {
+  margin: 10px;
+}
+
+.config-label {
+  display: block;
+  margin: 10px;
+}
+
+.config-input {
+  width: 50px;
+  border-radius: 4px;
+  height: 2em;
+  border: solid 1px #dcdcdc;
+  padding: 5px;
+  outline: none;
+}
+
+#timer-wrapper {
+  color: #333333;
+  font-size: 2em;
+  top: 0;
+  padding: 10px;
+  position: sticky;
+  position: -webkit-sticky;
+  text-align: center;
+  background-color: #ffffff;
+  border-bottom: 1px solid #dcdcdc;
+  box-shadow: 0px 5px 7px -9px #000000;
+}
+
+.timer-warning {
+  color: #ff5858;
 }
