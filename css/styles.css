@@ -25,14 +25,13 @@ button {
   padding: 10px;
   border-radius: 5px;
   border: none;
-  background-image: linear-gradient(00deg, #ff5858 60%, #f09819 100%);
   font-size: 0.9em;
   outline: none;
   color: #fff;
 }
 
 #stats-wrapper {
-  width: 12em;
+  width: 20em;
   margin: 20px auto;
 }
 
@@ -53,28 +52,28 @@ button {
   text-align: center;
 }
 
-#startButton {
+#start-button {
   background-image: linear-gradient(to top, #0ba360 0%, #3cba92 100%);
 }
 
-#startButton:active:hover {
-  background-image: linear-gradient(to top, #0ba360 0%, #3cba92 100%);
+#start-button:active:hover {
+  background-image: linear-gradient(to top, #0ba360 30%, #3cba92 100%);
 }
 
-#checkAnswers {
-  background-image: linear-gradient(-60deg, #ff5858 0%, #f09819 100%);
+#submit-answers {
+  background-image: linear-gradient(to top, #ff5858 0%, #f09819 100%);
 }
 
-#checkAnswers:active:hover {
-  background-image: linear-gradient(-60deg, #ff5858 0%, #f09819 100%);
+#submit-answers:active:hover {
+  background-image: linear-gradient(to top, #ff5858 30%, #f09819 100%);
 }
 
-#quitButton {
-  background-image: linear-gradient(to right, #868f96 0%, #596164 100%);
+#quit-button {
+  background-image: linear-gradient(to bottom, #868f96 0%, #596164 100%);
 }
 
-#quitButton:active:hover{
-  background-image: linear-gradient(to right, #868f96 0%, #596164 100%);
+#quit-button:active:hover{
+  background-image: linear-gradient(to bottom, #868f96 3%, #596164 100%);
 }
 
 #questions > div {
