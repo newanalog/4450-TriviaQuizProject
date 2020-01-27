@@ -39,7 +39,7 @@ const questionPool = {
     , { "correctAnswers": ["red"], "questionType": "text-based", "question": "What is Kevin's favorite color?" }
     , { "correctAnswers": ["coffee", "americano", "espresso", "cappuccino", "latte"], "questionType": "text-based", "question": "Name a major type of coffee drink." }
     , { "correctAnswers": ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"], "questionType": "text-based", "question": "Name a day of the week." }
-    , { "correctAnswers": ["rain", "snow", "sleet", "hail", "mixed"], "questionType": "text-based", "question": "Name on of type of precipitation." }
+    , { "correctAnswers": ["rain", "snow", "sleet", "hail", "mixed"], "questionType": "text-based", "question": "Name one type of precipitation." }
     , { "correctAnswers": ["Nashville"], "questionType": "text-based", "question": "What is the capital of Tennessee?" }
   ]
 }
